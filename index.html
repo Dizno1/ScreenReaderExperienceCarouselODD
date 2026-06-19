@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accessible Multimedia Carousel Demo v6</title>
+  <style>
+    :root {
+      --bg: #f7f4ef;
+      --panel: #ffffff;
+      --ink: #1d1b16;
+      --muted: #5b554b;
+      --accent: #6b3f1d;
+      --accent-dark: #3f2411;
+      --focus: #005fcc;
+      --soft: #e8dfd2;
+      --shadow: 0 10px 30px rgba(0,0,0,.15);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; line-height: 1.55; color: var(--ink); background: var(--bg); }
+    a { color: #064f9e; }
+    a:focus, button:focus, input:focus, textarea:focus, [tabindex]:focus { outline: 4px solid var(--focus); outline-offset: 3px; }
+    .skip-link { position: absolute; left: 1rem; top: -10rem; z-index: 999; padding: .75rem 1rem; background: #fff; border: 2px solid #000; }
+    .skip-link:focus { top: 1rem; }
+    header, main, footer { max-width: 1180px; margin: 0 auto; padding: 1.25rem; }
+    header { padding-top: 2rem; }
+    h1 { font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.1; margin: 0 0 .5rem; }
+    .lede { max-width: 72ch; font-size: 1.15rem; color: var(--muted); }
+    .between-content, .feature-note { margin: 2rem 0; padding: 1rem; background: #fff; border: 2px solid var(--accent-dark); border-radius: .75rem; }
+    .carousel-shell { margin-top: 1.5rem; background: var(--panel); border: 3px solid var(--accent-dark); border-radius: 1rem; box-shadow: var(--shadow); overflow: hidden; }
+    .carousel-region { padding: 1rem; }
+    .carousel-instructions { margin: 0 0 1rem; padding: 1rem; background: var(--soft); border-left: 6px solid var(--accent); }
+    .status-line { font-weight: 700; margin: .5rem 0 1rem; }
+    .error-message { margin-top: .35rem; color: #8a1f11; font-weight: 700; }
+    .error-summary { padding: 1rem; border: 3px solid #8a1f11; background: #fff4f1; border-radius: .5rem; }
+    .slides { position: relative; }
+    .slide { display: none; min-height: 25rem; padding: 1.25rem; border-radius: .75rem; background: #fffaf2; }
+    .slide.active { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+    .slide h2 { font-size: clamp(1.65rem, 3vw, 2.5rem); margin: 0; }
+    .slide-count { font-weight: 700; color: var(--accent-dark); margin: 0; }
+    .media-frame { border: 2px solid #2b2118; border-radius: .75rem; overflow: hidden; background: #1f1a14; }
+    .media-frame img, .media-frame video { display: block; width: 100%; max-height: 30rem; object-fit: cover; background: #000; }
+    .button-row { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .5rem; }
+    button, .button-link { display: inline-block; border: 2px solid var(--accent-dark); border-radius: .6rem; padding: .75rem 1rem; background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 1rem; }
+    button:hover, .button-link:hover { background: var(--accent-dark); }
+    .secondary-button { background: #fff; color: var(--accent-dark); }
+    .secondary-button:hover { background: #f0e5d7; }
+    .carousel-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; padding: 1rem; border-top: 3px solid var(--accent-dark); background: var(--soft); }
+    .carousel-controls p { margin: 0; font-weight: 700; }
+    form { display: grid; gap: .75rem; max-width: 35rem; }
+    label { font-weight: 700; }
+    input, textarea { width: 100%; padding: .75rem; border: 2px solid #5b554b; border-radius: .4rem; font: inherit; }
+    .resource-list { display: grid; gap: .75rem; padding-left: 1.25rem; }
+    .visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    @media (min-width: 850px) { .slide.active.two-column { grid-template-columns: 1.1fr .9fr; align-items: center; } }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header>
+    <h1>Accessible Multimedia Carousel Demo v6</h1>
+    <p class="lede">This version tests two separate carousel regions on one page. Each carousel pauses independently when the user enters that region and resumes when the user leaves. The manual Pause motion control is a site-wide motion preference and is remembered across visits.</p>
+  </header>
+  <main id="main">
+    <section class="between-content" aria-labelledby="before-heading">
+      <h2 id="before-heading">Before the first carousel</h2>
+      <p>This text is intentionally placed before the first carousel. When you move from this section into the first carousel, the first carousel should pause. When you leave the first carousel and move to the next heading, it should resume unless motion has been manually paused.</p>
+    </section>
+
+    <section class="carousel-shell" aria-labelledby="carousel-one-title">
+      <div id="carousel-one" class="carousel-region" role="region" aria-roledescription="carousel" aria-labelledby="carousel-one-title" tabindex="0" data-carousel data-index="0">
+        <h2 id="carousel-one-title">Multimedia carousel</h2>
+        <p class="carousel-instructions">This first carousel contains images, videos, buttons, links, and a form. It should pause while the user is inside this carousel region and resume after the user leaves this region, unless Pause motion has been activated.</p>
+        <p class="status-line" data-status>Automatic slide rotation is active.</p>
+        <div class="visually-hidden" data-live aria-live="polite" aria-atomic="true"></div>
+        <div class="slides">
+          <article class="slide active two-column" data-slide="1" aria-labelledby="c1-slide-1-heading" aria-describedby="c1-slide-1-desc" tabindex="0">
+            <div>
+              <p class="slide-count">Slide 1 of 5</p>
+              <h2 id="c1-slide-1-heading" tabindex="-1">Welcome to the Open Door Accessibility Lab</h2>
+              <p id="c1-slide-1-desc">This slide introduces the multimedia carousel test. Use Previous and Next to move between slides.</p>
+              <div class="button-row"><button type="button" data-go-to="2">Begin exploring</button></div>
+            </div>
+            <div class="media-frame"><img src="assets/02_dino_carousel_welcome.png" alt="Dino stands in an open doorway, inviting visitors to begin their journey."></div>
+          </article>
+          <article class="slide two-column" data-slide="2" aria-labelledby="c1-slide-2-heading" aria-describedby="c1-slide-2-desc" tabindex="-1" hidden>
+            <div>
+              <p class="slide-count">Slide 2 of 5</p>
+              <h2 id="c1-slide-2-heading" tabindex="-1">Technology Connects Us</h2>
+              <p id="c1-slide-2-desc">This short clip works well for a slide about mobile access, digital communication, and inclusive design.</p>
+              <p><strong>Video description:</strong> A close-up view shows a person holding a smartphone and typing with both thumbs.</p>
+            </div>
+            <div class="media-frame"><video preload="metadata" poster="assets/mixkit-hands-of-a-person-typing-on-a-cell-phone-4915-hd-ready.jpg" aria-label="Video: hands typing on a smartphone" aria-describedby="c1-slide-2-desc" tabindex="-1"><source src="assets/mixkit-hands-of-a-person-typing-on-a-cell-phone-4915-hd-ready.mp4" type="video/mp4">Your browser does not support the video element.</video><div class="button-row"><button type="button" data-video-toggle>Play video</button></div></div>
+          </article>
+          <article class="slide two-column" data-slide="3" aria-labelledby="c1-slide-3-heading" aria-describedby="c1-slide-3-desc" tabindex="-1" hidden>
+            <div>
+              <p class="slide-count">Slide 3 of 5</p>
+              <h2 id="c1-slide-3-heading" tabindex="-1">Innovation Supports Independence</h2>
+              <p id="c1-slide-3-desc">This clip shows how technology and independent work can belong in the same story.</p>
+              <p><strong>Video description:</strong> A person with a prosthetic leg sits on a park bench using a laptop, with trees and flowers in the background.</p>
+            </div>
+            <div class="media-frame"><video preload="metadata" poster="assets/8435372-uhd_4096_2160_25fps.jpg" aria-label="Video: person with a prosthetic leg using a laptop" aria-describedby="c1-slide-3-desc" tabindex="-1"><source src="assets/8435372-uhd_4096_2160_25fps.mp4" type="video/mp4">Your browser does not support the video element.</video><div class="button-row"><button type="button" data-video-toggle>Play video</button></div></div>
+          </article>
+          <article class="slide" data-slide="4" aria-labelledby="c1-slide-4-heading" aria-describedby="c1-slide-4-desc" tabindex="-1" hidden>
+            <p class="slide-count">Slide 4 of 5</p>
+            <h2 id="c1-slide-4-heading" tabindex="-1">Stay Connected</h2>
+            <p id="c1-slide-4-desc">This slide demonstrates form controls inside the carousel. Motion remains paused while the user works in the form.</p>
+            <form data-demo-form novalidate>
+              <div class="error-summary" tabindex="-1" data-form-errors hidden></div>
+              <div><label for="name-one">Name</label><input id="name-one" name="name" autocomplete="name" required aria-describedby="name-one-error"><p id="name-one-error" class="error-message" data-error-for="name" hidden></p></div>
+              <div><label for="email-one">Email address</label><input id="email-one" name="email" type="email" autocomplete="email" required aria-describedby="email-one-error"><p id="email-one-error" class="error-message" data-error-for="email" hidden></p></div>
+              <div><label for="interest-one">What accessibility topic interests you?</label><textarea id="interest-one" name="interest" rows="4" required aria-describedby="interest-one-error"></textarea><p id="interest-one-error" class="error-message" data-error-for="interest" hidden></p></div>
+              <button type="submit">Subscribe to updates</button>
+            </form>
+          </article>
+          <article class="slide" data-slide="5" aria-labelledby="c1-slide-5-heading" aria-describedby="c1-slide-5-desc" tabindex="-1" hidden>
+            <p class="slide-count">Slide 5 of 5</p>
+            <h2 id="c1-slide-5-heading" tabindex="-1">Accessibility Resources</h2>
+            <p id="c1-slide-5-desc">This slide demonstrates multiple links inside a carousel slide.</p>
+            <ul class="resource-list"><li><a href="#">Read the accessibility statement</a></li><li><a href="#">Explore the Accessibility Lab</a></li><li><a href="#">Review featured projects</a></li></ul>
+          </article>
+        </div>
+        <div class="carousel-controls" aria-label="Carousel controls"><button type="button" class="secondary-button" data-prev>Previous slide</button><button type="button" data-pause>Pause motion</button><button type="button" class="secondary-button" data-next>Next slide</button><p data-position aria-live="off">Slide 1 of 5</p></div>
+      </div>
+    </section>
+
+    <section class="between-content" aria-labelledby="between-heading">
+      <h2 id="between-heading">Content between carousel regions</h2>
+      <p>This section exists so you can test leaving the first carousel region. When the virtual cursor or keyboard focus reaches this heading or paragraph, the first carousel should no longer be treated as the active carousel region.</p>
+      <p>Continue to the next heading to enter a second carousel region. The first carousel and second carousel manage their own automatic motion independently unless the site-wide Pause motion preference is enabled.</p>
+    </section>
+
+    <section class="carousel-shell" aria-labelledby="carousel-two-title">
+      <div id="carousel-two" class="carousel-region" role="region" aria-roledescription="carousel" aria-labelledby="carousel-two-title" tabindex="0" data-carousel data-index="1">
+        <h2 id="carousel-two-title">Initiatives carousel</h2>
+        <p class="carousel-instructions">This second carousel is a simple homepage-style initiatives carousel. It uses the same motion rules as the first carousel, but with lighter content.</p>
+        <p class="status-line" data-status>Automatic slide rotation is active.</p>
+        <div class="visually-hidden" data-live aria-live="polite" aria-atomic="true"></div>
+        <div class="slides">
+          <article class="slide active" data-slide="1" aria-labelledby="c2-slide-1-heading" aria-describedby="c2-slide-1-desc" tabindex="0">
+            <p class="slide-count">Slide 1 of 4</p>
+            <h2 id="c2-slide-1-heading" tabindex="-1">SR Document Remediation Tool</h2>
+            <p id="c2-slide-1-desc">A project exploring screen-reader-first workflows for PDF and document remediation.</p>
+            <a class="button-link" href="#">Explore the project</a>
+          </article>
+          <article class="slide" data-slide="2" aria-labelledby="c2-slide-2-heading" aria-describedby="c2-slide-2-desc" tabindex="-1" hidden>
+            <p class="slide-count">Slide 2 of 4</p>
+            <h2 id="c2-slide-2-heading" tabindex="-1">Accessible Video Suite</h2>
+            <p id="c2-slide-2-desc">Accessible media playback, captions, transcripts, descriptions, and predictable controls.</p>
+            <a class="button-link" href="#">Explore the project</a>
+          </article>
+          <article class="slide" data-slide="3" aria-labelledby="c2-slide-3-heading" aria-describedby="c2-slide-3-desc" tabindex="-1" hidden>
+            <p class="slide-count">Slide 3 of 4</p>
+            <h2 id="c2-slide-3-heading" tabindex="-1">CPACC Accessibility Academy</h2>
+            <p id="c2-slide-3-desc">A learning experience built to support accessibility study through practice and reinforcement.</p>
+            <a class="button-link" href="#">Explore the academy</a>
+          </article>
+          <article class="slide" data-slide="4" aria-labelledby="c2-slide-4-heading" aria-describedby="c2-slide-4-desc" tabindex="-1" hidden>
+            <p class="slide-count">Slide 4 of 4</p>
+            <h2 id="c2-slide-4-heading" tabindex="-1">Join the Journey</h2>
+            <p id="c2-slide-4-desc">Collaboration, innovation, and community begin with an open door.</p>
+            <a class="button-link" href="#">Get involved</a>
+          </article>
+        </div>
+        <div class="carousel-controls" aria-label="Carousel controls"><button type="button" class="secondary-button" data-prev>Previous slide</button><button type="button" data-pause>Pause motion</button><button type="button" class="secondary-button" data-next>Next slide</button><p data-position aria-live="off">Slide 1 of 4</p></div>
+      </div>
+    </section>
+
+    <section class="feature-note" aria-labelledby="after-heading">
+      <h2 id="after-heading">After the second carousel</h2>
+      <p>This section exists to test leaving the second carousel region. Once the user reaches this section, the second carousel should no longer be treated as the active carousel region.</p>
+    </section>
+  </main>
+  <footer role="contentinfo">
+    <p>Footer region. Reaching this region should also count as leaving both carousel regions.</p>
+  </footer>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'accessibleMultiMediaCarouselMotionPreference';
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const allCarousels = [];
+  let siteMotionPaused = localStorage.getItem(STORAGE_KEY) === 'paused' || prefersReducedMotion;
+  const interval = 6500;
+
+  function updateSitePreference(paused) {
+    siteMotionPaused = paused;
+    localStorage.setItem(STORAGE_KEY, paused ? 'paused' : 'active');
+    allCarousels.forEach(instance => {
+      instance.updatePauseButton();
+      instance.stopTimer();
+      if (paused) {
+        instance.updateStatus('Motion is paused by your site-wide preference.');
+        instance.announce('Motion paused. This preference will be remembered.');
+      } else {
+        instance.announce('Motion preference set to resume.');
+        instance.startTimer();
+      }
+    });
+  }
+
+  class AccessibleCarousel {
+    constructor(root) {
+      this.root = root;
+      this.slides = Array.from(root.querySelectorAll('.slide'));
+      this.prevButton = root.querySelector('[data-prev]');
+      this.nextButton = root.querySelector('[data-next]');
+      this.pauseButton = root.querySelector('[data-pause]');
+      this.status = root.querySelector('[data-status]');
+      this.live = root.querySelector('[data-live]');
+      this.position = root.querySelector('[data-position]');
+      this.videos = Array.from(root.querySelectorAll('video'));
+      this.videoButtons = Array.from(root.querySelectorAll('[data-video-toggle]'));
+      this.currentIndex = 0;
+      this.timerId = null;
+      this.insideRegion = false;
+      this.videoPlaying = false;
+      this.lastAnnouncement = '';
+      this.bind();
+      this.updatePauseButton();
+      this.setSlideAccessibility();
+      this.startTimer();
+    }
+
+    shouldRotate() {
+      return !siteMotionPaused && !this.insideRegion && !this.videoPlaying;
+    }
+
+    announce(message) {
+      if (this.lastAnnouncement === message) return;
+      this.lastAnnouncement = message;
+      this.live.textContent = '';
+      window.setTimeout(() => { this.live.textContent = message; }, 50);
+    }
+
+    updateStatus(message) { this.status.textContent = message; }
+
+    startTimer() {
+      this.stopTimer();
+      if (!this.shouldRotate()) return;
+      this.timerId = window.setInterval(() => this.showSlide((this.currentIndex + 1) % this.slides.length, false), interval);
+      this.updateStatus('Automatic slide rotation is active.');
+    }
+
+    stopTimer() {
+      if (this.timerId) {
+        window.clearInterval(this.timerId);
+        this.timerId = null;
+      }
+    }
+
+    updatePauseButton() {
+      if (siteMotionPaused) {
+        this.pauseButton.textContent = 'Resume motion';
+        this.pauseButton.setAttribute('aria-pressed', 'true');
+      } else {
+        this.pauseButton.textContent = 'Pause motion';
+        this.pauseButton.setAttribute('aria-pressed', 'false');
+      }
+    }
+
+    setSlideAccessibility() {
+      this.slides.forEach((slide, index) => {
+        const isActive = index === this.currentIndex;
+        slide.hidden = !isActive;
+        slide.classList.toggle('active', isActive);
+        slide.setAttribute('tabindex', isActive ? '0' : '-1');
+        if (isActive) {
+          slide.removeAttribute('aria-hidden');
+          slide.removeAttribute('inert');
+        } else {
+          slide.setAttribute('aria-hidden', 'true');
+          slide.setAttribute('inert', '');
+        }
+      });
+    }
+
+    enterRegion(message = 'Carousel motion paused.') {
+      this.insideRegion = true;
+      this.stopTimer();
+      this.updateStatus(message);
+      this.announce(message);
+    }
+
+    leaveRegion() {
+      this.insideRegion = false;
+      this.lastAnnouncement = '';
+      if (this.shouldRotate()) {
+        this.announce('Carousel motion resumed.');
+        this.startTimer();
+      } else if (siteMotionPaused) {
+        this.updateStatus('Motion is paused by your site-wide preference.');
+      }
+    }
+
+    showSlide(newIndex, moveFocusToHeading) {
+      this.videos.forEach(video => video.pause());
+      this.videoPlaying = false;
+      this.currentIndex = newIndex;
+      this.setSlideAccessibility();
+      this.position.textContent = `Slide ${this.currentIndex + 1} of ${this.slides.length}`;
+      this.updateVideoButtons();
+      if (moveFocusToHeading) {
+        this.enterRegion('Carousel motion paused.');
+        const heading = this.slides[this.currentIndex].querySelector('h2');
+        if (heading) heading.focus({ preventScroll: false });
+      }
+    }
+
+    updateVideoButtons() {
+      this.videoButtons.forEach(button => {
+        const video = button.closest('.media-frame')?.querySelector('video');
+        if (!video) return;
+        button.textContent = video.paused ? 'Play video' : 'Pause video';
+        button.setAttribute('aria-pressed', video.paused ? 'false' : 'true');
+      });
+    }
+
+    bind() {
+      this.prevButton.addEventListener('click', () => this.showSlide((this.currentIndex - 1 + this.slides.length) % this.slides.length, true));
+      this.nextButton.addEventListener('click', () => this.showSlide((this.currentIndex + 1) % this.slides.length, true));
+      this.root.querySelectorAll('[data-go-to]').forEach(button => {
+        button.addEventListener('click', () => this.showSlide(Number(button.getAttribute('data-go-to')) - 1, true));
+      });
+      this.pauseButton.addEventListener('click', () => updateSitePreference(!siteMotionPaused));
+
+      this.root.addEventListener('focusin', () => this.enterRegion('Carousel motion paused.'));
+      this.root.addEventListener('focusout', () => {
+        window.setTimeout(() => {
+          if (!this.root.contains(document.activeElement)) this.leaveRegion();
+        }, 0);
+      });
+      this.root.addEventListener('pointerdown', () => this.enterRegion('Carousel motion paused.'));
+      this.root.addEventListener('keydown', () => this.enterRegion('Carousel motion paused.'));
+
+      this.videoButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const video = button.closest('.media-frame')?.querySelector('video');
+          if (!video) return;
+          this.enterRegion('Carousel motion paused while video is playing.');
+          if (video.paused) video.play();
+          else video.pause();
+          button.focus({ preventScroll: true });
+          this.updateVideoButtons();
+        });
+      });
+
+      this.videos.forEach(video => {
+        video.addEventListener('play', () => {
+          this.videoPlaying = true;
+          this.enterRegion('Carousel motion paused while video is playing.');
+          this.updateVideoButtons();
+        });
+        video.addEventListener('pause', () => {
+          this.videoPlaying = this.videos.some(item => !item.paused && !item.ended);
+          this.updateVideoButtons();
+          if (!this.videoPlaying && this.shouldRotate()) this.startTimer();
+        });
+        video.addEventListener('ended', () => {
+          this.videoPlaying = this.videos.some(item => !item.paused && !item.ended);
+          this.updateVideoButtons();
+          if (!this.videoPlaying && this.shouldRotate()) this.startTimer();
+        });
+      });
+      this.root.querySelectorAll('[data-demo-form]').forEach(form => this.bindForm(form));
+    }
+
+    bindForm(form) {
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        const formErrors = form.querySelector('[data-form-errors]');
+        const fields = [
+          { input: form.elements.name, error: form.querySelector('[data-error-for="name"]'), message: 'Enter your name.' },
+          { input: form.elements.email, error: form.querySelector('[data-error-for="email"]'), message: 'Enter a valid email address.' },
+          { input: form.elements.interest, error: form.querySelector('[data-error-for="interest"]'), message: 'Enter at least one accessibility topic.' }
+        ];
+        const errors = [];
+        fields.forEach(item => {
+          item.error.hidden = true;
+          item.error.textContent = '';
+          item.input.removeAttribute('aria-invalid');
+          const value = item.input.value.trim();
+          const invalidEmail = item.input.type === 'email' && value && !item.input.validity.valid;
+          if (!value || invalidEmail) {
+            item.input.setAttribute('aria-invalid', 'true');
+            item.error.textContent = item.message;
+            item.error.hidden = false;
+            errors.push(item);
+          }
+        });
+        if (errors.length) {
+          const summaryText = errors.length === 1 ? '1 error found.' : `${errors.length} errors found.`;
+          formErrors.innerHTML = `<p><strong>${summaryText}</strong></p><p>Please review the fields marked below.</p>`;
+          formErrors.hidden = false;
+          this.announce(`${summaryText} Please review the fields marked below.`);
+          errors[0].input.focus();
+          return;
+        }
+        formErrors.hidden = true;
+        this.announce('Demo form submitted. No information was sent.');
+        form.reset();
+      });
+    }
+  }
+
+  document.querySelectorAll('[data-carousel]').forEach(root => allCarousels.push(new AccessibleCarousel(root)));
+
+  if (prefersReducedMotion && localStorage.getItem(STORAGE_KEY) !== 'active') {
+    localStorage.setItem(STORAGE_KEY, 'paused');
+    siteMotionPaused = true;
+  }
+  allCarousels.forEach(instance => {
+    instance.updatePauseButton();
+    if (siteMotionPaused) instance.updateStatus(prefersReducedMotion ? 'Motion is paused because reduced motion is enabled or because Pause motion was previously selected.' : 'Motion is paused by your site-wide preference.');
+    else instance.startTimer();
+  });
+})();
+</script>
+</body>
+</html>
