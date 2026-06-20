@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Accessible Multimedia Carousel Demo v6</title>
+  <title>Accessible Multimedia Carousel Demo v8</title>
   <style>
     :root {
       --bg: #f7f4ef;
@@ -59,8 +59,8 @@
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
   <header>
-    <h1>Accessible Multimedia Carousel Demo v6</h1>
-    <p class="lede">This version tests two separate carousel regions on one page. Each carousel pauses independently when the user enters that region and resumes when the user leaves. The manual Pause motion control is a site-wide motion preference and is remembered across visits.</p>
+    <h1>Accessible Multimedia Carousel Demo v8</h1>
+    <p class="lede">This version tests two separate carousel regions on one page using a simpler region-based motion model. Each carousel pauses while the user is inside that carousel region and resumes when the user leaves, unless the site-wide Pause motion preference has been selected.</p>
   </header>
   <main id="main">
     <section class="between-content" aria-labelledby="before-heading">
@@ -71,7 +71,7 @@
     <section class="carousel-shell" aria-labelledby="carousel-one-title">
       <div id="carousel-one" class="carousel-region" role="region" aria-roledescription="carousel" aria-labelledby="carousel-one-title" tabindex="0" data-carousel data-index="0">
         <h2 id="carousel-one-title">Multimedia carousel</h2>
-        <p class="carousel-instructions">This first carousel contains images, videos, buttons, links, and a form. It should pause while the user is inside this carousel region and resume after the user leaves this region, unless Pause motion has been activated.</p>
+        <p class="carousel-instructions">This first carousel contains images, videos, buttons, links, and a form. It should pause while the user is inside this carousel region and resume after the user leaves this region, unless Pause motion has been activated. This version does not use viewport or reading-area detection. It adds direct pause triggers to interactive controls inside each carousel.</p>
         <p class="status-line" data-status>Automatic slide rotation is active.</p>
         <div class="visually-hidden" data-live aria-live="polite" aria-atomic="true"></div>
         <div class="slides">
@@ -228,13 +228,15 @@
     }
 
     announce(message) {
-      if (this.lastAnnouncement === message) return;
+      if (!message || this.lastAnnouncement === message) return;
       this.lastAnnouncement = message;
       this.live.textContent = '';
       window.setTimeout(() => { this.live.textContent = message; }, 50);
     }
 
-    updateStatus(message) { this.status.textContent = message; }
+    updateStatus(message) {
+      if (this.status.textContent !== message) this.status.textContent = message;
+    }
 
     startTimer() {
       this.stopTimer();
@@ -277,20 +279,24 @@
     }
 
     enterRegion(message = 'Carousel motion paused.') {
+      const wasInside = this.insideRegion;
       this.insideRegion = true;
       this.stopTimer();
       this.updateStatus(message);
-      this.announce(message);
+      if (!wasInside) this.announce(message);
     }
 
     leaveRegion() {
+      const wasInside = this.insideRegion;
       this.insideRegion = false;
       this.lastAnnouncement = '';
       if (this.shouldRotate()) {
-        this.announce('Carousel motion resumed.');
+        if (wasInside) this.announce('Carousel motion resumed.');
         this.startTimer();
       } else if (siteMotionPaused) {
         this.updateStatus('Motion is paused by your site-wide preference.');
+      } else if (this.videoPlaying) {
+        this.updateStatus('Carousel motion paused while video is playing.');
       }
     }
 
@@ -325,23 +331,44 @@
       });
       this.pauseButton.addEventListener('click', () => updateSitePreference(!siteMotionPaused));
 
-      this.root.addEventListener('focusin', () => this.enterRegion('Carousel motion paused.'));
+      const pauseFromRegion = () => this.enterRegion('Carousel motion paused.');
+      this.root.addEventListener('focusin', pauseFromRegion, true);
+      this.root.addEventListener('focus', pauseFromRegion, true);
       this.root.addEventListener('focusout', () => {
         window.setTimeout(() => {
           if (!this.root.contains(document.activeElement)) this.leaveRegion();
         }, 0);
+      }, true);
+      this.root.addEventListener('pointerdown', pauseFromRegion, true);
+      this.root.addEventListener('mousedown', pauseFromRegion, true);
+      this.root.addEventListener('click', pauseFromRegion, true);
+      this.root.addEventListener('keydown', pauseFromRegion, true);
+      this.root.addEventListener('keyup', pauseFromRegion, true);
+      this.root.addEventListener('input', pauseFromRegion, true);
+      this.root.addEventListener('change', pauseFromRegion, true);
+      this.root.querySelectorAll('a, button, input, textarea, select, video, [tabindex]').forEach(control => {
+        ['focus','focusin','keydown','keyup','click','input','change','pointerdown','mousedown'].forEach(eventName => {
+          control.addEventListener(eventName, pauseFromRegion, true);
+        });
       });
-      this.root.addEventListener('pointerdown', () => this.enterRegion('Carousel motion paused.'));
-      this.root.addEventListener('keydown', () => this.enterRegion('Carousel motion paused.'));
 
       this.videoButtons.forEach(button => {
-        button.addEventListener('click', () => {
+        button.addEventListener('click', event => {
+          event.preventDefault();
           const video = button.closest('.media-frame')?.querySelector('video');
           if (!video) return;
           this.enterRegion('Carousel motion paused while video is playing.');
-          if (video.paused) video.play();
-          else video.pause();
-          button.focus({ preventScroll: true });
+          if (video.paused) {
+            const playResult = video.play();
+            if (playResult && typeof playResult.then === 'function') {
+              playResult.finally(() => button.focus({ preventScroll: true }));
+            } else {
+              button.focus({ preventScroll: true });
+            }
+          } else {
+            video.pause();
+            button.focus({ preventScroll: true });
+          }
           this.updateVideoButtons();
         });
       });
